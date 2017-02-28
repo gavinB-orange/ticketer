@@ -44,6 +44,7 @@ def showSignUp():
 
 @app.route("/signUp",methods=['POST'])
 def signUp():
+    _role = 'user'  # default role
     _name = request.form['inputName']
     _email = request.form['inputEmail']
     _password = request.form['inputPassword']
@@ -56,7 +57,7 @@ def signUp():
     cursor = conn.cursor()
     #validate
     if _name and _email and _password and _hashed_password:
-        cursor.callproc('sp_createUser',(_name,_email,_hashed_password))
+        cursor.callproc('sp_createUser',(_name,_email,_hashed_password, _role))
         data = cursor.fetchall()
         if len(data) is 0:
             conn.commit()

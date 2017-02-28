@@ -26,18 +26,18 @@ echo "`date` : waiting over - continuing"
 # create the user table in the database
 mysql -uticketer -p$(cat $PASSWORD_FILE) --host=172.17.0.1 --port=6603 -DTICKETER -e 'CREATE TABLE `TICKETER`.`tbl_user` (\
 `user_id` BIGINT NOT NULL AUTO_INCREMENT,\
-`user_name` VARCHAR(45) NULL,\
-`user_username` VARCHAR(45) NULL,\
-`user_password` VARCHAR(45) NULL,\
+`user_name` VARCHAR(64) NULL,\
+`user_username` VARCHAR(64) NULL,\
+`user_password` VARCHAR(256) NULL,\
 `user_role` VARCHAR(8) NULL,\
 PRIMARY KEY (`user_id`));'
 # add the stored procedure for creating users - note requires root priviledges
 cat > script.sql<<'EOF'
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_createUser`(
-    IN p_name VARCHAR(20),
-    IN p_username VARCHAR(20),
-    IN p_password VARCHAR(20),
+    IN p_name VARCHAR(64),
+    IN p_username VARCHAR(64),
+    IN p_password VARCHAR(256),
     IN p_role VARCHAR(8)
 )
 BEGIN
