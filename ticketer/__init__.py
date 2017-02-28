@@ -18,8 +18,7 @@ with open(dbpassfile, 'r') as f:
     if pwd[-1] == '\n':
         pwd = pwd[:-1]
     app.config['MYSQL_DATABASE_PASSWORD'] = pwd
-
-for k in app.config.keys():
-    print k, app.config[k]
+# also use the pwd as the secret_key to enable sessions
+app.secret_key = pwd
 
 mysql.init_app(app)

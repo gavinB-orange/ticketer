@@ -2,7 +2,7 @@
 <html lang="en">
  
 <head>
-    <title>Python Flask Bucket List App</title>
+    <title>Unauthorized Access:: Python Flask Bucket List App</title>
  
  
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -20,9 +20,9 @@
                 <ul class="nav nav-pills pull-right">
                     <li role="presentation" class="active"><a href="#">Home</a>
                     </li>
-                    <li role="presentation"><a href="showSignIn">Sign In</a>
+                    <li role="presentation"><a href="/showSignin">Sign In</a>
                     </li>
-                    <li role="presentation"><a href="showSignUp">Sign Up</a>
+                    <li role="presentation"><a href="/showSignUp">Sign Up</a>
                     </li>
                 </ul>
             </nav>
@@ -30,15 +30,10 @@
         </div>
  
         <div class="jumbotron">
-            <h1>Ticketing App</h1>
-            <p class="lead"></p>
-            <p><a class="btn btn-lg btn-success" href="showSignUp" role="button">Sign up today</a>
-            </p>
+            <h1>{{error}}</h1>
         </div>
  
-        <div class="row marketing">
-            <h2>Ticketing menu items</h2>
-        </div>
+ 
  
         <footer class="footer">
             <p>&copy; Company 2015</p>
@@ -48,3 +43,4 @@
 </body>
  
 </html>
+

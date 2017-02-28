@@ -63,6 +63,18 @@ END$$
 DELIMITER ;
 EOF
 mysql -uroot -p$(cat $PASSWORD_FILE) --host=172.17.0.1 --port=6603 -DTICKETER < script.sql
+# add the stored procedure for validating users - note requires root privileges
+cat > script.sql<<'EOF'
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_validateLogin`(
+IN p_username VARCHAR(64)
+)
+BEGIN
+    select * from tbl_user where user_username = p_username;
+END$$
+DELIMITER ;
+EOF
+mysql -uroot -p$(cat $PASSWORD_FILE) --host=172.17.0.1 --port=6603 -DTICKETER < script.sql
 
 
 echo "Database can now be accessed via :"
