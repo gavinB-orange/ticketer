@@ -5,8 +5,9 @@
 
 PASSWORD_FILE=$(pwd)/db.pass
 
+# create a random (numeric only) password
 read rstuff < /dev/urandom
-echo $rstuff | od -c | head -1 | awk '{print $2$3$4$5$6$7$8$9$10}' > $PASSWORD_FILE
+echo $rstuff | od -b | head -1 | awk '{print $2$3$4$5$6$7$8$9$10}' > $PASSWORD_FILE
 
 docker run --name ticketerdb -e MYSQL_ROOT_PASSWORD=$(cat $PASSWORD_FILE)\
                              -e MYSQL_DATABASE=TICKETER\
