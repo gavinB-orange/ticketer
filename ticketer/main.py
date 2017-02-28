@@ -42,17 +42,13 @@ def showSignUp():
     return render_template('signup.html')
 
 
-@app.route("/signUp",methods=['POST'])
+@app.route("/signUp",methods=['POST', 'GET'])
 def signUp():
     _role = 'user'  # default role
     _name = request.form['inputName']
     _email = request.form['inputEmail']
     _password = request.form['inputPassword']
     _hashed_password = generate_password_hash(_password)
-    print "name = ", _name
-    print "email = ", _email
-    print "password = ", _password
-    print "hashed = ", _hashed_password
     try:
         conn = mysql.connect()
         cursor = conn.cursor()
@@ -62,10 +58,10 @@ def signUp():
             data = cursor.fetchall()
             if len(data) is 0:
                 conn.commit()
-                #return json.dumps({'message':'User created successfully !'})
                 return render_template('signin.html')
         else:
-            return json.dumps({'html': '<span>Enter the required fields</span>'})
+            #return json.dumps({'html': '<span>Enter the required fields</span>'})
+            return render_template('error.html', error='Enter all the required fields for sign up!')
     finally:
         cursor.close()
         conn.close()
@@ -91,11 +87,11 @@ def validateLogin():
                 session['user'] = data[0][0]
                 return redirect('/userHome')
             else:
-                return render_template('error.html', error = 'Wrong Email address or Password.')
+                return render_template('error.html', error='Wrong Email address or Password : hash mismatch.')
         else:
-            return render_template('error.html', error = 'Wrong Email address or Password.')
+            return render_template('error.html', error='Wrong Email address or Password : len(data) <= 0')
     except Exception as e:
-        return render_template('error.html', error = str(e))
+        return render_template('error.html', error=str(e))
     finally:
         cursor.close()
         con.close()
