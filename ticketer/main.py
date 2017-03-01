@@ -84,6 +84,7 @@ def validateLogin():
         if len(data) > 0:
             if check_password_hash(str(data[0][3]),_password):
                 session['user'] = data[0][0]
+                session['username'] = _username
                 return redirect('/userHome')
             else:
                 return render_template('error.html', error='Wrong Email address or Password : hash mismatch.')
@@ -98,12 +99,16 @@ def validateLogin():
 
 @app.route('/userHome')
 def userHome():
-    return render_template('userHome.html')
+    try:
+        username = session['username']
+    except KeyError:
+        return render_template('error.html', error="Please sign in")
+    return render_template('userHome.html', user=session['username'])
 
 
 @app.route('/logout')
 def logout():
-    session.pop('user',None)
+    session.pop('user', None)
     return redirect('/')
 
 
