@@ -58,10 +58,9 @@ def signUp():
             data = cursor.fetchall()
             if len(data) is 0:
                 conn.commit()
-                return render_template('signin.html')
+                return json.dumps({'status': 'ok'})
         else:
-            #return json.dumps({'html': '<span>Enter the required fields</span>'})
-            return render_template('error.html', error='Enter all the required fields for sign up!')
+            return json.dumps({'html': '<span>Enter the required fields</span>'})
     finally:
         cursor.close()
         conn.close()
