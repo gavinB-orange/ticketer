@@ -2,6 +2,7 @@
 
 # create a database using a docker container with known user/password
 # and accessible from the host machine.
+#
 
 # create a random (numeric only) password
 read rstuff < /dev/urandom
@@ -15,10 +16,10 @@ docker run --name ticketerdb -e MYSQL_ROOT_PASSWORD=$pass\
                              -p 6603:3306 -d mysql/mysql-server:latest
 
 # create mysql option file
-mysql_extras=$(pwd)/mysql_extra_options
-echo "[client]" > $mysql_extras
-echo "password = $pass" >> $mysql_extras
-chmod 600 $mysql_extras
+mysql_defaults=$(pwd)/mysql_extra_options
+echo "[client]" > $mysql_defaults
+echo "password = $pass" >> $mysql_defaults
+chmod 600 $mysql_defaults
 
 echo "`date` : waiting for the container to boot"
 while ! nc -z 172.17.0.1 6603; do
@@ -28,7 +29,7 @@ done
 echo "`date` : waiting over - continuing"
 
 # create the user table in the database
-mysql --defaults-extra-file=$mysql_extras --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`tbl_user` (\
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`tbl_user` (\
 `user_id` BIGINT NOT NULL AUTO_INCREMENT,\
 `user_name` VARCHAR(64) NULL,\
 `user_username` VARCHAR(64) NULL,\
@@ -66,7 +67,7 @@ BEGIN
 END$$
 DELIMITER ;
 EOF
-mysql --defaults-extra-file=$mysql_extras --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
 # add the stored procedure for validating users - note requires root privileges
 cat > script.sql<<'EOF'
 DELIMITER $$
@@ -78,8 +79,8 @@ BEGIN
 END$$
 DELIMITER ;
 EOF
-mysql --defaults-extra-file=$mysql_extras --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
 
 
 echo "Database can now be accessed via :"
-echo "mysql --defaults-extra-file=$mysql_extras --host=172.17.0.1 --port=6603 -DTICKETER -uticketer"
+echo "mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer"
