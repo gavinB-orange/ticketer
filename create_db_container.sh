@@ -80,6 +80,24 @@ END$$
 DELIMITER ;
 EOF
 mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
+# create the tickets table in the database
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`tickets` (\
+`ticket_id` BIGINT NOT NULL AUTO_INCREMENT,\
+`ticket_key` VARCHAR(64) NULL,\
+`ticket_summary` VARCHAR(256) NULL,\
+`ticket_owner` BIGINT,\
+`ticket_content_id` BIGINT,\
+PRIMARY KEY (`ticket_id`));'
+# tickets have one or more comments
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`ticket_contents` (\
+`content_id` BIGINT NOT NULL AUTO_INCREMENT,\
+`ticket_id` BIGINT,\
+`comment_author_id` BIGINT,\
+`next_content_id` BIGINT NULL,\
+`text` VARCHAR(1024),\
+PRIMARY KEY (`content_id`));'
+
+
 
 
 echo "Database can now be accessed via :"
