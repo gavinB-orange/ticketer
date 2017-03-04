@@ -112,6 +112,11 @@ def logout():
     return redirect('/')
 
 
+@app.route('/createTicket')
+def createTicket():
+    return render_template('create_ticket.html', user=session['username'])
+
+
 if __name__ == '__main__':
     p = Processor()
     main()
