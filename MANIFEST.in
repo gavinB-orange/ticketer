@@ -1,0 +1,6 @@
+graft ticketer/templates
+graft ticketer/static
+graft requirements.txt
+graft create_db_container.sh
+graft README.md
+graft LICENSE
