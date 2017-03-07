@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-from flask import Flask, render_template, request, json, redirect, session
+from flask import Flask, render_template, request, json, redirect, session, g
 from flaskext.mysql import MySQL
 from processor import Processor
 from werkzeug import generate_password_hash, check_password_hash
+
 
 # fix import for running as script
 if __name__ == '__main__':
@@ -21,9 +22,37 @@ if __name__ == '__main__':
         from ..ticketer import port
         from ..ticketer import mysql
 
+
+# set up app context so we can access g
+ctx = app.app_context()
+ctx.push()
+# set shared db resources to None
+g.db_connection = None
+g.db_cursor = None
+
+
+def get_db_connection():
+    if g.db_connection is None:
+        g.db_connection = mysql.connect()
+    return g.db_connection
+
+
+def get_cursor():
+    if g.db_cursor is None:
+        g.db_cursor = get_db_connection().cursor()
+    return g.db_cursor
+
+
+def init_db():
+    print "Init DB"
+    cursor = get_cursor()
+    print "do init stuff here"
+
+
 def main():
     print "***",app_name,"***"
     print "mysql = ", mysql
+    init_db()
     app.run(port=port, debug=True)
 
 
@@ -49,21 +78,16 @@ def signUp():
     _email = request.form['inputEmail']
     _password = request.form['inputPassword']
     _hashed_password = generate_password_hash(_password)
-    try:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        #validate
-        if _name and _email and _password and _hashed_password:
-            cursor.callproc('sp_createUser',(_name,_email,_hashed_password, _role))
-            data = cursor.fetchall()
-            if len(data) is 0:
-                conn.commit()
-                return json.dumps({'status': 'ok'})
-        else:
-            return json.dumps({'html': '<span>Enter the required fields</span>'})
-    finally:
-        cursor.close()
-        conn.close()
+    cursor = get_cursor()
+    #validate
+    if _name and _email and _password and _hashed_password:
+        cursor.callproc('sp_createUser',(_name,_email,_hashed_password, _role))
+        data = cursor.fetchall()
+        if len(data) is 0:
+            conn.commit()
+            return json.dumps({'status': 'ok'})
+    else:
+        return json.dumps({'html': '<span>Enter the required fields</span>'})
 
 
 @app.route('/showSignIn')
@@ -77,8 +101,7 @@ def validateLogin():
         _username = request.form['inputEmail']
         _password = request.form['inputPassword']
         # connect to mysql
-        con = mysql.connect()
-        cursor = con.cursor()
+        cursor = get_cursor()
         cursor.callproc('sp_validateLogin',(_username,))
         data = cursor.fetchall()
         if len(data) > 0:
@@ -92,9 +115,16 @@ def validateLogin():
             return render_template('error.html', error='Wrong Email address or Password : len(data) <= 0')
     except Exception as e:
         return render_template('error.html', error=str(e))
-    finally:
-        cursor.close()
-        con.close()
+
+
+@app.teardown_appcontext
+def close_db(error):
+    if error is not None:
+        print str(error)
+    if hasattr(g, "db_cursor"):
+        g.db_cursor.close()
+    if hasattr(g, "db_connection"):
+        g.db_connection.close()
 
 
 @app.route('/userHome')

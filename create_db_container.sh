@@ -4,6 +4,8 @@
 # and accessible from the host machine.
 #
 
+set -eux
+
 # create a random (numeric only) password
 read rstuff < /dev/urandom
 pass=$(echo $rstuff | od -b | head -1 | awk '{print $2$3$4$5$6$7$8$9$10}')
@@ -86,7 +88,7 @@ mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -
 `ticket_key` VARCHAR(64) NULL,\
 `ticket_summary` VARCHAR(256) NULL,\
 `ticket_owner` BIGINT,\
-`ticket_content_id` BIGINT,\
+`ticket_content_id` BIGINT NULL,\
 PRIMARY KEY (`ticket_id`));'
 # tickets have one or more comments
 mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`ticket_contents` (\
@@ -96,8 +98,31 @@ mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -
 `next_content_id` BIGINT NULL,\
 `text` VARCHAR(1024),\
 PRIMARY KEY (`content_id`));'
-
-
+# SP for creating an issue
+cat > script.sql<<'EOF'
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_createTicket`(
+IN p_key VARCHAR(64),
+IN p_summary VARCHAR(256),
+IN p_owner_id BIGINT
+)
+BEGIN
+    insert into tickets
+    (
+        ticket_key,
+        ticket_summary,
+        ticket_owner
+    )
+    values
+    (
+        p_key,
+        p_summary,
+        p_owner
+    );
+END$$
+DELIMITER ;
+EOF
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
 
 
 echo "Database can now be accessed via :"
