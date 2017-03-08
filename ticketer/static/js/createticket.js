@@ -2,7 +2,7 @@ $(function(){
 	$('#btnCreateTicket').click(function(){
         console.log("CreateTicket button clicked");
 		$.ajax({
-			url: '/signUp',
+			url: '/doCreateTicket',
 			data: $('form').serialize(),
 			type: 'POST',
 			success: function(response){
