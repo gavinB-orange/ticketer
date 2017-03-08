@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from flask import Flask, render_template, request, json, redirect, session, g
+import flask
+
+from flask import Flask, render_template, request, json, redirect, session
 from flaskext.mysql import MySQL
 from processor import Processor
 from werkzeug import generate_password_hash, check_password_hash
@@ -23,36 +25,47 @@ if __name__ == '__main__':
         from ..ticketer import mysql
 
 
-# set up app context so we can access g
-ctx = app.app_context()
-ctx.push()
-# set shared db resources to None
-g.db_connection = None
-g.db_cursor = None
+def init_db():
+    print "Init DB"
+    print "mysql = ", mysql
+    print "do init stuff here"
 
 
-def get_db_connection():
-    if g.db_connection is None:
-        g.db_connection = mysql.connect()
-    return g.db_connection
+with app.app_context():
+    print "One time init"
+    flask.g.db_connection = mysql.connect()
+    flask.g.db_cursor = flask.g.db_connection.cursor()
+    init_db()
+
+
+def get_connection():
+    """
+    Needs to be called from within the application context
+    If a connection does not already exist, it creates one
+    using the mysql global.
+    :return db_connection
+    """
+    if not hasattr(flask.g, "db_connection"):
+        print "Creating new db_connection"
+        flask.g.db_connection = mysql.connect()
+    return flask.g.db_connection
 
 
 def get_cursor():
-    if g.db_cursor is None:
-        g.db_cursor = get_db_connection().cursor()
-    return g.db_cursor
-
-
-def init_db():
-    print "Init DB"
-    cursor = get_cursor()
-    print "do init stuff here"
+    """
+    Needs to be called from within the application context
+    If a cursor does not already exist, it creates one using
+    get_connection()
+    :return db_cursor
+    """
+    if not hasattr(flask.g, "db_cursor"):
+        print "Creating new db_cursor"
+        flask.g.db_cursor = get_connection().cursor()
+    return flask.g.db_cursor
 
 
 def main():
     print "***",app_name,"***"
-    print "mysql = ", mysql
-    init_db()
     app.run(port=port, debug=True)
 
 
@@ -78,6 +91,7 @@ def signUp():
     _email = request.form['inputEmail']
     _password = request.form['inputPassword']
     _hashed_password = generate_password_hash(_password)
+    conn = get_connection()
     cursor = get_cursor()
     #validate
     if _name and _email and _password and _hashed_password:
@@ -119,12 +133,13 @@ def validateLogin():
 
 @app.teardown_appcontext
 def close_db(error):
+    print "Closing down db cursor and connection"
     if error is not None:
         print str(error)
-    if hasattr(g, "db_cursor"):
-        g.db_cursor.close()
-    if hasattr(g, "db_connection"):
-        g.db_connection.close()
+    if hasattr(flask.g, "db_cursor"):
+        flask.g.db_cursor.close()
+    if hasattr(flask.g, "db_connection"):
+        flask.g.db_connection.close()
 
 
 @app.route('/userHome')

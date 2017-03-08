@@ -4,7 +4,7 @@
 # and accessible from the host machine.
 #
 
-set -eux
+set -eu
 
 # create a random (numeric only) password
 read rstuff < /dev/urandom
@@ -31,98 +31,17 @@ done
 echo "`date` : waiting over - continuing"
 
 # create the user table in the database
-mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`tbl_user` (\
-`user_id` BIGINT NOT NULL AUTO_INCREMENT,\
-`user_name` VARCHAR(64) NULL,\
-`user_username` VARCHAR(64) NULL,\
-`user_password` VARCHAR(256) NULL,\
-`user_role` VARCHAR(8) NULL,\
-PRIMARY KEY (`user_id`));'
-# add the stored procedure for creating users - note requires root priviledges
-cat > script.sql<<'EOF'
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_createUser`(
-    IN p_name VARCHAR(64),
-    IN p_username VARCHAR(64),
-    IN p_password VARCHAR(256),
-    IN p_role VARCHAR(8)
-)
-BEGIN
-    IF ( select exists (select 1 from tbl_user where user_username = p_username) ) THEN
-        select "Username Exists !!";
-    ELSE
-        insert into tbl_user
-        (
-            user_name,
-            user_username,
-            user_password,
-            user_role
-        )
-        values
-        (
-            p_name,
-            p_username,
-            p_password,
-            p_role
-        );
-    END IF;
-END$$
-DELIMITER ;
-EOF
-mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
-# add the stored procedure for validating users - note requires root privileges
-cat > script.sql<<'EOF'
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_validateLogin`(
-IN p_username VARCHAR(64)
-)
-BEGIN
-    select * from tbl_user where user_username = p_username;
-END$$
-DELIMITER ;
-EOF
-mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer < sql/create_user_table.sql
+# add the stored procedure for creating users - note sp requires root priviledges
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < sql/create_sp_createuser.sql
+# add the stored procedure for validating users - note sp requires root privileges
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < sql/create_sp_validatelogin.sql
 # create the tickets table in the database
-mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`tickets` (\
-`ticket_id` BIGINT NOT NULL AUTO_INCREMENT,\
-`ticket_key` VARCHAR(64) NULL,\
-`ticket_summary` VARCHAR(256) NULL,\
-`ticket_owner` BIGINT,\
-`ticket_content_id` BIGINT NULL,\
-PRIMARY KEY (`ticket_id`));'
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer < sql/create_tickets_table.sql
 # tickets have one or more comments
-mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer -e 'CREATE TABLE `TICKETER`.`ticket_contents` (\
-`content_id` BIGINT NOT NULL AUTO_INCREMENT,\
-`ticket_id` BIGINT,\
-`comment_author_id` BIGINT,\
-`next_content_id` BIGINT NULL,\
-`text` VARCHAR(1024),\
-PRIMARY KEY (`content_id`));'
-# SP for creating an issue
-cat > script.sql<<'EOF'
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_createTicket`(
-IN p_key VARCHAR(64),
-IN p_summary VARCHAR(256),
-IN p_owner_id BIGINT
-)
-BEGIN
-    insert into tickets
-    (
-        ticket_key,
-        ticket_summary,
-        ticket_owner
-    )
-    values
-    (
-        p_key,
-        p_summary,
-        p_owner
-    );
-END$$
-DELIMITER ;
-EOF
-mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < script.sql
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uticketer < sql/create_contents_table.sql
+# add the stored procedure for validating users - note sp requires root privileges
+mysql --defaults-file=$mysql_defaults --host=172.17.0.1 --port=6603 -DTICKETER -uroot < sql/create_sp_createticket.sql
 
 
 echo "Database can now be accessed via :"
