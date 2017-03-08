@@ -1,12 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
     <title>Create Ticket</title>
-</head>
-<body>
-
-<h1> Create Ticket Page</h1>
-
-</body>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link href="../static/css/signup.css" rel="stylesheet">
+    <script src="../static/js/jquery-3.1.1.min.js"></script>
+    <script src="../static/js/createticket.js"></script>
+  </head>
+ 
+  <body>
+    <div class="container">
+      <div class="header">
+        <h3 class="text-muted">Create Ticket</h3>
+      </div>
+ 
+      <div class="jumbotron">
+        <h1>Create Ticket</h1>
+        <form class="form-createticket">
+          <label for="inputKey" class="sr-only">Key</label>
+          <input type="key" name="key" id="inputKey" class="form-control" placeholder="Ticket Key" required autofocus>
+          <label for="inputSummary" class="sr-only">Summary</label>
+          <input type="summary" name="inputSummary" id="inputSummary" class="form-control" placeholder="Ticket Summary" required autofocus>
+          <label for="inputOwner" class="sr-only">Owner</label>
+          <input type="owner" name="inputOwner" id="inputOwner" class="form-control" placeholder="Ticket owner" required>
+        <button id="btnCreateTicket" class="btn btn-lg btn-primary btn-block" type="button">Submit</button>
+        </form>
+      </div>
+ 
+      <footer class="footer">
+        <p>&copy; Company 2017</p>
+      </footer>
+ 
+    </div>
+  </body>
 </html>

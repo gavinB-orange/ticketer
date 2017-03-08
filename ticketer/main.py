@@ -162,6 +162,31 @@ def createTicket():
     return render_template('create_ticket.html', user=session['username'])
 
 
+@app.route('/doCreateTicket')
+def doCreateTicket():
+    try:
+        _key = request.form['key']
+        _summary = request.form['summary']
+        _owner = request.form['owner']
+        cursor = get_cursor()
+        cursor.callproc('sp_createTicket', (_key, _summary, _owner))
+        data = cursor.fetchall()
+        if len(data) is 0:
+            conn.commit()
+            return json.dumps({'status': 'ok'})
+        else:
+            return json.dumps({'html': '<span>Enter the required fields</span>'})
+    except Exception as e:
+        return json.dumps({'status': 'failed'})
+
+
+@app.route('/showSignIn')
+def showSignin():
+    return render_template('signin.html')
+
+    return redirect('/')
+
+
 if __name__ == '__main__':
     p = Processor()
     main()
