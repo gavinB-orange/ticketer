@@ -2,11 +2,16 @@
 
 import flask
 
-from flask import Flask, render_template, request, json, redirect, session
+from flask import Flask, render_template, request, json, redirect, session, flash
 from flaskext.mysql import MySQL
 from processor import Processor
 from werkzeug import generate_password_hash, check_password_hash
 
+
+def init_db():
+    print "Init DB"
+    print "mysql = ", mysql
+    print "do init stuff here"
 
 # fix import for running as script
 if __name__ == '__main__':
@@ -23,12 +28,12 @@ if __name__ == '__main__':
         from ..ticketer import app
         from ..ticketer import port
         from ..ticketer import mysql
-
-
-def init_db():
-    print "Init DB"
-    print "mysql = ", mysql
-    print "do init stuff here"
+else:
+    from ticketer import name as app_name
+    from ticketer import app
+    from ticketer import port
+    from ticketer import mysql
+    
 
 
 with app.app_context():
@@ -76,7 +81,7 @@ def home():
 
 @app.route("/hi")
 def sayhi():
-    return p.say("hi")
+    return "hi"
 
 
 @app.route("/showSignUp")
@@ -98,8 +103,13 @@ def signUp():
         cursor.callproc('sp_createUser',(_name,_email,_hashed_password, _role))
         data = cursor.fetchall()
         if len(data) is 0:
+            print "signup happy path"
             conn.commit()
             return json.dumps({'status': 'ok'})
+        else:
+            if 'Username Exists' in data[0][0]:
+                print "User already exists"
+                return json.dumps({'status': 'ok'})
     else:
         return json.dumps({'html': '<span>Enter the required fields</span>'})
 
@@ -118,12 +128,17 @@ def validateLogin():
         cursor = get_cursor()
         cursor.callproc('sp_validateLogin',(_username,))
         data = cursor.fetchall()
+        print "user : ", _username
+        print "pass : ", _password
+        print "data = ", str(data)
         if len(data) > 0:
             if check_password_hash(str(data[0][3]),_password):
                 session['user'] = data[0][0]
                 session['username'] = _username
+                flash("You have logged in successfully")
                 return redirect('/userHome')
             else:
+                print "failed login detected"
                 return render_template('error.html', error='Wrong Email address or Password : hash mismatch.')
         else:
             return render_template('error.html', error='Wrong Email address or Password : len(data) <= 0')
@@ -173,18 +188,14 @@ def doCreateTicket():
         data = cursor.fetchall()
         if len(data) is 0:
             conn.commit()
+            print "create ticket worked"
             return json.dumps({'status': 'ok'})
         else:
+            print "something odd happened"
+            print str(data)
             return json.dumps({'html': '<span>Enter the required fields</span>'})
     except Exception as e:
         return json.dumps({'status': 'failed'})
-
-
-@app.route('/showSignIn')
-def showSignin():
-    return render_template('signin.html')
-
-    return redirect('/')
 
 
 if __name__ == '__main__':
