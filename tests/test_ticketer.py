@@ -68,5 +68,9 @@ class TicketerTestCase(unittest.TestCase):
     def logout(self):
         return self.app.get('/logout', follow_redirects=True)
 
+    def test_logout(self):
+        resp = self.logout()
+        assert resp.status == '200 OK'
+
 if __name__ == '__main__':
     unittest.main()
