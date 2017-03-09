@@ -44,6 +44,7 @@ class TicketerTestCase(unittest.TestCase):
                              data=dict(inputName=name, inputEmail=email, inputPassword=password),
                              follow_redirects=True)
 
+    # test_signup should be run before login/logout tests as it creates a known user.
     def test_signup(self):
         resp = self.signup(self.username, 
                            self.user_email,
